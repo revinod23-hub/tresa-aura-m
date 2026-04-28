@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelPlan — Teca</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Firebase SDK Official CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --sand: #f5ede0;
+            --sand2: #ede0cd;
+            --clay: #ffffff;
+            --clay-dark: #e0e0e0;
+            --forest: #800020;
+            --forest-light: #a0002a;
+            --cream: #fdf8f3;
+            --ink: #1e1a16;
+            --ink-soft: #4a3f35;
+            --sky: #6ba3be;
+            --accent: #800020;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #800020;
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ===== HERO ===== */
+        .hero {
+            position: relative;
+            background: var(--forest);
+            padding: 3rem 2rem 4rem;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -40px; right: -60px;
+            width: 320px; height: 320px;
+            border-radius: 50%;
+            background: rgba(200, 149, 108, 0.15);
+        }
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -80px; left: -40px;
+            width: 240px; height: 240px;
+            border-radius: 50%;
+            background: rgba(107, 163, 190, 0.1);
+        }
+        .hero-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+        .hero-eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.1);
+            color: var(--sand);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 6px 16px;
+            border-radius: 40px;
+            margin-bottom: 1.2rem;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 0.6rem;
+        }
+        .hero h1 span {
+            color: var(--clay);
+        }
+        .hero-sub {
+            color: rgba(255,255,255,0.65);
+            font-size: 1rem;
+            font-weight: 300;
+            max-width: 480px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .hero-dest-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.18);
+            border-radius: 2rem;
+            padding: 10px 16px;
+            max-width: 420px;
+            flex-wrap: wrap;
+        }
+        .hero-dest-bar label {
+            color: rgba(255,255,255,0.6);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .hero-dest-bar input {
+            background: none;
+            border: none;
+            color: #fff;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            font-weight: 700;
+            outline: none;
+            flex: 1;
+            min-width: 100px;
+        }
+        .hero-dest-bar input::placeholder { color: rgba(255,255,255,0.35); }
+        .btn-save-dest {
+            background: var(--clay);
+            color: #fff;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .btn-save-dest:hover { background: var(--clay-dark); }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 2rem;
+        }
+        @media(max-width: 800px) {
+            .main { grid-template-columns: 1fr; }
+        }
+
+        /* ===== SECTION TITLES ===== */
+        .section-head {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+        .count-pill {
+            background: var(--sand2);
+            color: var(--ink-soft);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 30px;
+        }
+
+        /* ===== ADD FORM ===== */
+        .add-form {
+            background: #fff;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1.5px solid var(--sand2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+        }
+        .form-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .field label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-soft);
+        }
+        .field input, .field select {
+            padding: 12px 14px;
+            border: 1.5px solid #ece5dc;
+            border-radius: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            background: var(--cream);
+            color: var(--ink);
+            transition: 0.2s;
+            outline: none;
+        }
+        .field input:focus, .field select:focus {
+            border-color: var(--clay);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(128,0,32,0.15);
+        }
+        .field-desc { flex: 1 1 260px; }
+        .field-cat { flex: 0 1 140px; }
+        .field-cost { flex: 0 1 150px; }
+        .btn-add {
+            background: var(--forest);
+            color: #fff;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .btn-add:hover { background: var(--forest-light); transform: translateY(-1px); }
+
+        /* ===== ITEM CARDS ===== */
+        .items-list { display: flex; flex-direction: column; gap: 10px; }
+        .item-card {
+            background: #fff;
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1.5px solid #f0e8de;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            transition: 0.2s;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .item-card:hover { border-color: var(--clay); box-shadow: 0 4px 16px rgba(200,149,108,0.12); }
+        .item-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .cat-transport .item-icon { background: #e8f4fd; }
+        .cat-hotel .item-icon { background: #fef3e2; }
+        .cat-food .item-icon { background: #fce8e8; }
+        .cat-wisata .item-icon { background: #fbe6ec; }
+        .cat-belanja .item-icon { background: #f3e5f5; }
+        .cat-lain .item-icon { background: #f5f5f5; }
+        .item-info { flex: 1; }
+        .item-desc {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--ink);
+            line-height: 1.3;
+            margin-bottom: 3px;
+        }
+        .item-cat-label {
+            font-size: 0.7rem;
+            color: var(--ink-soft);
+            opacity: 0.7;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .item-dt {
+            font-size: 0.75rem;
+            color: #800020;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+        }
+        .item-note {
+            font-size: 0.73rem;
+            color: var(--ink-soft);
+            margin-top: 2px;
+            opacity: 0.7;
+            font-style: italic;
+        }
+        .item-cost {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--clay-dark);
+            white-space: nowrap;
+        }
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 6px;
+            border-radius: 8px;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-delete:hover { color: #e74c3c; background: #fee2e2; }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--ink-soft);
+            opacity: 0.5;
+        }
+        .empty-state .big-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .empty-state p { font-size: 0.9rem; }
+
+        /* ===== FEEDBACK MSG ===== */
+        .feedback {
+            margin-top: 12px;
+            min-height: 36px;
+            transition: 0.3s;
+        }
+        .feedback-inner {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.82rem;
+            font-weight: 500;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar { display: flex; flex-direction: column; gap: 1.2rem; }
+
+        /* Summary card */
+        .summary-card {
+            background: var(--forest);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            color: #fff;
+            position: sticky;
+            top: 1.5rem;
+        }
+        .summary-card .s-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            color: #fff;
+        }
+        .summary-card .s-dest {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            margin-bottom: 1.4rem;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .cat-breakdown { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1.4rem; }
+        .cat-row {
+            display: flex; align-items: center; justify-content: space-between;
+            font-size: 0.82rem;
+        }
+        .cat-row-left { display: flex; align-items: center; gap: 8px; opacity: 0.85; }
+        .cat-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+        }
+        .cat-row-cost { font-weight: 600; opacity: 0.9; }
+        .divider { border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 0.8rem 0; }
+        .grand-total-label { font-size: 0.75rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.1em; }
+        .grand-total-val {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: var(--clay);
+            line-height: 1.1;
+            margin-top: 4px;
+        }
+        .grand-item-count { font-size: 0.78rem; opacity: 0.55; margin-top: 4px; }
+
+        /* Actions */
+        .action-card {
+            background: #fff;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            border: 1.5px solid var(--sand2);
+        }
+        .action-card .a-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink-soft);
+            margin-bottom: 0.8rem;
+        }
+        .btn-block {
+            width: 100%;
+            padding: 11px 16px;
+            border-radius: 1rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            transition: 0.2s;
+            margin-bottom: 8px;
+        }
+        .btn-sample { background: var(--sand); color: var(--ink-soft); }
+        .btn-sample:hover { background: var(--sand2); }
+        .btn-clear { background: #fee2e2; color: #b91c1c; }
+        .btn-clear:hover { background: #fecaca; }
+
+        /* Tip box */
+        .tip-box {
+            background: #fffbf5;
+            border-radius: 1.2rem;
+            padding: 1rem 1.2rem;
+            border: 1.5px solid #f0e4d0;
+        }
+        .tip-box .t-title { font-size: 0.8rem; font-weight: 600; color: var(--clay-dark); margin-bottom: 0.5rem; }
+        .tip-box ul { padding-left: 1.2rem; }
+        .tip-box li { font-size: 0.8rem; color: var(--ink-soft); margin-bottom: 4px; line-height: 1.4; }
+
+        /* Scroll to top */
+        .storage-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--ink-soft);
+            opacity: 0.5;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--sand2);
+        }
+
+        /* Category colors for chart dots */
+        .dot-transport { background: #6baed6; }
+        .dot-hotel { background: #f4a261; }
+        .dot-food { background: #ffffff; }
+        .dot-wisata { background: #800020; }
+        .dot-belanja { background: #9b72cf; }
+        .dot-lain { background: #adb5bd; }
+
+        @media(max-width: 500px) {
+            .field-desc { flex: 1 1 100%; }
+            .field-cat, .field-cost { flex: 1 1 120px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+    <div class="hero-inner">
+        <div class="hero-eyebrow"><i class="fas fa-compass"></i> Travel Planner</div>
+        <h1>Rencana Perjalanan<br>ke <span id="heroDestName">Teca</span></h1>
+        <p class="hero-sub">Catat transportasi, penginapan, kuliner, wisata & belanja. Hitung estimasi biaya total perjalanan kamu.</p>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:1rem;">
+            <div style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2); border-radius:30px; padding:6px 14px; font-size:0.78rem; font-weight:500; color:white; display:flex; align-items:center; gap:6px;">
+                <i class="fas fa-cloud"></i> <span id="syncStatus">🔄 Menghubungkan ke cloud...</span>
+            </div>
+        </div>
+        <div class="hero-dest-bar">
+            <label><i class="fas fa-map-pin"></i> Destinasi</label>
+            <input type="text" id="destinationInput" value="Teca" placeholder="Nama tujuan...">
+            <button class="btn-save-dest" id="updateDestBtn"><i class="fas fa-check"></i> Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+    <!-- LEFT: Form + List -->
+    <div>
+        <div class="add-form">
+            <div class="form-row">
+                <div class="field field-desc">
+                    <label><i class="fas fa-pen-to-square"></i> Deskripsi Kegiatan</label>
+                    <input type="text" id="itemDesc" placeholder="Misal: Tiket pesawat ke Teca, Hotel Bunga Tanjung...">
+                </div>
+                <div class="field field-cat">
+                    <label><i class="fas fa-tag"></i> Kategori</label>
+                    <select id="itemCat">
+                        <option value="transport">🚌 Transport</option>
+                        <option value="hotel">🏨 Penginapan</option>
+                        <option value="food">🍴 Kuliner</option>
+                        <option value="wisata">🏞️ Wisata</option>
+                        <option value="belanja">🛍️ Belanja</option>
+                        <option value="lain">📦 Lainnya</option>
+                    </select>
+                </div>
+                <div class="field field-cost">
+                    <label><i class="fas fa-coins"></i> Biaya (Rp)</label>
+                    <input type="number" id="itemCost" placeholder="0" min="0" step="5000">
+                </div>
+            </div>
+            <div class="form-row" style="margin-top:10px;">
+                <div class="field" style="flex:1 1 170px;">
+                    <label><i class="fas fa-calendar-days"></i> Tanggal</label>
+                    <input type="date" id="itemDate">
+                </div>
+                <div class="field" style="flex:1 1 130px;">
+                    <label><i class="fas fa-clock"></i> Jam</label>
+                    <input type="time" id="itemTime">
+                </div>
+                <div class="field" style="flex:2 1 200px;">
+                    <label><i class="fas fa-note-sticky"></i> Catatan (opsional)</label>
+                    <input type="text" id="itemNote" placeholder="Misal: Bawa KTP, booking dulu...">
+                </div>
+                <button class="btn-add" id="addItemBtn"><i class="fas fa-plus"></i> Tambah</button>
+            </div>
+            <div class="feedback" id="feedbackDiv"></div>
+        </div>
+
+        <div class="section-head">
+            <div class="section-title">Daftar Rencana</div>
+            <div class="count-pill" id="totalItemsPill">0 item</div>
+        </div>
+
+        <div class="items-list" id="itemsList">
+            <div class="empty-state">
+                <div class="big-icon">🗺️</div>
+                <p>Belum ada rencana.<br>Mulai tambahkan kegiatan perjalananmu!</p>
+            </div>
+        </div>
+
+        <p class="storage-note"><i class="fas fa-cloud"></i> Data tersimpan di cloud Firebase — sinkron otomatis ke semua perangkat & pengguna</p>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div class="sidebar">
+
+        <!-- Summary -->
+        <div class="summary-card">
+            <div class="s-title">Ringkasan Biaya</div>
+            <div class="s-dest"><i class="fas fa-location-dot"></i> <span id="summaryDest">Teca</span></div>
+            <div class="cat-breakdown" id="catBreakdown">
+                <div style="opacity:0.4; font-size: 0.82rem;">Belum ada item</div>
+            </div>
+            <hr class="divider">
+            <div class="grand-total-label">Total Estimasi</div>
+            <div class="grand-total-val" id="grandTotal">Rp 0</div>
+            <div class="grand-item-count" id="grandItemCount">0 kegiatan tercatat</div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-card">
+            <div class="a-title">Aksi Cepat</div>
+            <button class="btn-block btn-sample" id="loadSampleBtn"><i class="fas fa-wand-magic-sparkles"></i> Isi Contoh Rencana (Teca)</button>
+            <button class="btn-block btn-clear" id="clearAllBtn"><i class="fas fa-trash"></i> Hapus Semua Rencana</button>
+        </div>
+
+        <!-- Tips -->
+        <div class="tip-box">
+            <div class="t-title"><i class="fas fa-lightbulb"></i> Tips Rencana Perjalanan</div>
+            <ul>
+                <li>Catat biaya transportasi pergi <strong>dan</strong> pulang secara terpisah</li>
+                <li>Sisihkan 10–15% dari total sebagai dana darurat</li>
+                <li>Cek harga hotel lebih awal untuk diskon terbaik</li>
+                <li>Riset kuliner lokal khas sebelum berangkat</li>
+                <li>Simpan nomor penting (hotel, guide, SPBU terdekat)</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // ===== STATE =====
+    let destination = "Teca";
+    let items = []; // { id, description, category, cost, date, time, note }
+
+    const CAT_META = {
+        transport: { label: "Transport", icon: "🚌", dotClass: "dot-transport" },
+        hotel:     { label: "Penginapan", icon: "🏨", dotClass: "dot-hotel" },
+        food:      { label: "Kuliner", icon: "🍴", dotClass: "dot-food" },
+        wisata:    { label: "Wisata", icon: "🏞️", dotClass: "dot-wisata" },
+        belanja:   { label: "Belanja", icon: "🛍️", dotClass: "dot-belanja" },
+        lain:      { label: "Lainnya", icon: "📦", dotClass: "dot-lain" },
+    };
+
+    // ===== DOM =====
+    const destInput = document.getElementById('destinationInput');
+    const updateDestBtn = document.getElementById('updateDestBtn');
+    const heroDestName = document.getElementById('heroDestName');
+    const summaryDest = document.getElementById('summaryDest');
+    const itemDescInput = document.getElementById('itemDesc');
+    const itemCatSelect = document.getElementById('itemCat');
+    const itemCostInput = document.getElementById('itemCost');
+    const itemDateInput = document.getElementById('itemDate');
+    const itemTimeInput = document.getElementById('itemTime');
+    const itemNoteInput = document.getElementById('itemNote');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const itemsList = document.getElementById('itemsList');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const grandItemCountEl = document.getElementById('grandItemCount');
+    const catBreakdownEl = document.getElementById('catBreakdown');
+    const totalItemsPill = document.getElementById('totalItemsPill');
+    const feedbackDiv = document.getElementById('feedbackDiv');
+    const loadSampleBtn = document.getElementById('loadSampleBtn');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+
+    // ===== FORMAT =====
+    function formatRp(n) {
+        if (!n) return 'Rp 0';
+        return 'Rp ' + new Intl.NumberFormat('id-ID').format(Math.floor(n));
+    }
+    function esc(s) {
+        return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]||m));
+    }
+
+    // ===== FIREBASE CONFIG =====
+    const firebaseConfig = {
+        apiKey: "AIzaSyAaA-pcqRDcfPYao63PSJKXrEDczJ7995U",
+        authDomain: "travel-plan-b0747.firebaseapp.com",
+        databaseURL: "https://travel-plan-b0747-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "travel-plan-b0747",
+        storageBucket: "travel-plan-b0747.firebasestorage.app",
+        messagingSenderId: "251215119074",
+        appId: "1:251215119074:web:c56876dfbe0add479c94bb",
+        measurementId: "G-BF1XQ8CL1L"
+    };
+
+    // Init Firebase
+    let db = null, TRIP_REF = null, firebaseReady = false;
+
+    function initFirebase() {
+        try {
+            if (typeof firebase === 'undefined') {
+                throw new Error('Firebase SDK belum ter-load');
+            }
+            if (!firebase.apps || firebase.apps.length === 0) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            db = firebase.database();
+            TRIP_REF = db.ref('teca_plan');
+            firebaseReady = true;
+            console.log('Firebase berhasil diinit');
+        } catch(e) {
+            console.warn('Firebase gagal init:', e.message);
+            firebaseReady = false;
+            setStatus('⚠️ Mode offline (localStorage)', '#f0c040');
+        }
+    }
+
+    // Status online indicator
+    function setStatus(msg, color) {
+        const el = document.getElementById('syncStatus');
+        if (el) { el.textContent = msg; el.style.color = color || 'white'; }
+    }
+
+    // ===== SAVE =====
+    function save() {
+        // Selalu simpan ke localStorage sebagai backup
+        localStorage.setItem('travelplan_teca_v1', JSON.stringify({ destination, items }));
+        if (!firebaseReady || !TRIP_REF) return;
+        setStatus('⏳ Menyimpan...', '#f0c040');
+        TRIP_REF.set({ destination, items })
+            .then(() => setStatus('✅ Tersimpan & sinkron ke semua perangkat', '#90ee90'))
+            .catch(err => {
+                console.warn('Firebase save error:', err);
+                setStatus('⚠️ Tersimpan lokal saja (cek koneksi)', '#f0c040');
+            });
+    }
+
+    // ===== LOAD =====
+    function load() {
+        if (!firebaseReady || !TRIP_REF) {
+            setStatus('⚠️ Mode offline — cek koneksi internet', '#f0c040');
+            try {
+                const ld = JSON.parse(localStorage.getItem('travelplan_teca_v1'));
+                if (ld) { destination = ld.destination || "Teca"; items = ld.items || []; }
+                else setSampleData();
+            } catch { setSampleData(); }
+            destInput.value = destination;
+            updateDestUI(); render();
+            return;
+        }
+        setStatus('🔄 Menghubungkan ke cloud...', 'rgba(255,255,255,0.8)');
+        TRIP_REF.on('value', snapshot => {
+            const d = snapshot.val();
+            if (d) {
+                destination = d.destination || "Teca";
+                items = Array.isArray(d.items) ? d.items : [];
+            } else {
+                setSampleData();
+                save();
+            }
+            destInput.value = destination;
+            updateDestUI(); render();
+            setStatus('🌐 Sinkron — data sama di semua perangkat', '#90ee90');
+        }, err => {
+            console.warn('Firebase read error:', err);
+            setStatus('❌ Gagal terhubung — cek koneksi internet', '#ff8080');
+            try {
+                const ld = JSON.parse(localStorage.getItem('travelplan_teca_v1'));
+                if (ld) { destination = ld.destination || "Teca"; items = ld.items || []; }
+                else setSampleData();
+            } catch { setSampleData(); }
+            destInput.value = destination;
+            updateDestUI(); render();
+        });
+    }
+
+    // ===== SAMPLE DATA =====
+    function setSampleData() {
+        destination = "Teca";
+        const base = Date.now();
+        items = [
+            { id: base+1, description: "🚌 Bus Purwodadi → Teca (PP)", category: "transport", cost: 80000, date: "2026-05-10", time: "07:00", note: "Terminal Purwodadi" },
+            { id: base+2, description: "🏨 Penginapan Teca Indah 2 malam", category: "hotel", cost: 400000, date: "2026-05-10", time: "13:00", note: "Check-in jam 14.00" },
+            { id: base+3, description: "🍜 Sarapan & Makan Siang Hari 1", category: "food", cost: 90000, date: "2026-05-11", time: "08:00", note: "" },
+            { id: base+4, description: "🏞️ Tiket Wisata Alam Teca", category: "wisata", cost: 50000, date: "2026-05-11", time: "09:30", note: "Bawa sunscreen" },
+            { id: base+5, description: "🍴 Makan Malam Kuliner Khas Lokal", category: "food", cost: 75000, date: "2026-05-11", time: "18:30", note: "" },
+            { id: base+6, description: "🛍️ Oleh-oleh & Souvenir", category: "belanja", cost: 150000, date: "2026-05-12", time: "10:00", note: "Pasar Teca" },
+            { id: base+7, description: "🚗 Transport Dalam Kota (Ojek/Motor)", category: "transport", cost: 60000, date: "2026-05-12", time: "14:00", note: "" },
+        ];
+    }
+
+    // ===== RENDER =====
+    function render() {
+        // Pill
+        totalItemsPill.textContent = items.length + ' item';
+
+        // List
+        if (!items.length) {
+            itemsList.innerHTML = `<div class="empty-state"><div class="big-icon">🗺️</div><p>Belum ada rencana.<br>Mulai tambahkan kegiatan perjalananmu!</p></div>`;
+        } else {
+            itemsList.innerHTML = items.map((item, i) => {
+                const meta = CAT_META[item.category] || CAT_META.lain;
+                const dateStr = item.date ? formatDate(item.date) : '';
+                const timeStr = item.time ? item.time : '';
+                const dtLine = (dateStr || timeStr) ? `<div class="item-dt"><i class="fas fa-calendar-clock"></i> ${dateStr}${dateStr && timeStr ? ' · ' : ''}${timeStr}</div>` : '';
+                const noteLine = item.note ? `<div class="item-note"><i class="fas fa-note-sticky"></i> ${esc(item.note)}</div>` : '';
+                return `
+                <div class="item-card cat-${item.category}" data-id="${item.id}">
+                    <div class="item-icon">${meta.icon}</div>
+                    <div class="item-info">
+                        <div class="item-desc">${esc(item.description)}</div>
+                        <div class="item-cat-label">${meta.label}</div>
+                        ${dtLine}${noteLine}
+                    </div>
+                    <div class="item-cost">${formatRp(item.cost)}</div>
+                    <button class="btn-delete" data-id="${item.id}" title="Hapus"><i class="fas fa-times"></i></button>
+                </div>`;
+            }).join('');
+
+            document.querySelectorAll('.btn-delete').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = Number(btn.getAttribute('data-id'));
+                    items = items.filter(it => it.id !== id);
+                    save(); render();
+                    showFeedback('Item dihapus.', '#fee2e2', '#b91c1c');
+                });
+            });
+        }
+
+        // Summary
+        const total = items.reduce((s, it) => s + (it.cost || 0), 0);
+        grandTotalEl.textContent = formatRp(total);
+        grandItemCountEl.textContent = items.length + ' kegiatan tercatat';
+
+        // Category breakdown
+        const cats = {};
+        items.forEach(it => {
+            cats[it.category] = (cats[it.category] || 0) + (it.cost || 0);
+        });
+        const catEntries = Object.entries(cats).filter(([,v]) => v > 0);
+        if (!catEntries.length) {
+            catBreakdownEl.innerHTML = `<div style="opacity:0.4; font-size: 0.82rem;">Belum ada item</div>`;
+        } else {
+            catBreakdownEl.innerHTML = catEntries.map(([cat, val]) => {
+                const meta = CAT_META[cat] || CAT_META.lain;
+                return `<div class="cat-row">
+                    <div class="cat-row-left"><div class="cat-dot ${meta.dotClass}"></div>${meta.icon} ${meta.label}</div>
+                    <div class="cat-row-cost">${formatRp(val)}</div>
+                </div>`;
+            }).join('');
+        }
+    }
+
+    function updateDestUI() {
+        heroDestName.textContent = destination;
+        summaryDest.textContent = destination;
+    }
+
+    // ===== FEEDBACK =====
+    let fbTimeout = null;
+    function showFeedback(msg, bg, color) {
+        if (fbTimeout) clearTimeout(fbTimeout);
+        feedbackDiv.innerHTML = `<div class="feedback-inner" style="background:${bg}; color:${color}"><i class="fas fa-circle-check"></i> ${msg}</div>`;
+        fbTimeout = setTimeout(() => feedbackDiv.innerHTML = '', 2500);
+    }
+
+    // ===== FORMAT DATE =====
+    function formatDate(d) {
+        if (!d) return '';
+        const [y, m, day] = d.split('-');
+        const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+        const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sep','Okt','Nov','Des'];
+        const dt = new Date(y, m-1, day);
+        return `${days[dt.getDay()]}, ${parseInt(day)} ${months[parseInt(m)-1]} ${y}`;
+    }
+
+    // ===== ADD ITEM =====
+    function addItem() {
+        const desc = itemDescInput.value.trim();
+        const cat = itemCatSelect.value;
+        const cost = parseFloat(itemCostInput.value) || 0;
+        const date = itemDateInput.value;
+        const time = itemTimeInput.value;
+        const note = itemNoteInput.value.trim();
+        if (!desc) { showFeedback('Deskripsi tidak boleh kosong!', '#fee2e2', '#b91c1c'); return; }
+        items.push({ id: Date.now() + Math.random()*999|0, description: desc, category: cat, cost: Math.floor(cost), date, time, note });
+        itemDescInput.value = ''; itemCostInput.value = '';
+        itemDateInput.value = ''; itemTimeInput.value = ''; itemNoteInput.value = '';
+        itemDescInput.focus();
+        save(); render();
+        showFeedback(`"${desc}" berhasil ditambahkan!`, '#f9e6ea', '#800020');
+    }
+
+    // ===== EVENTS =====
+    addItemBtn.addEventListener('click', addItem);
+    itemDescInput.addEventListener('keypress', e => { if(e.key === 'Enter') addItem(); });
+    itemCostInput.addEventListener('keypress', e => { if(e.key === 'Enter') addItem(); });
+
+    updateDestBtn.addEventListener('click', () => {
+        const v = destInput.value.trim();
+        if (!v) { showFeedback('Nama destinasi tidak boleh kosong', '#fee2e2', '#b91c1c'); return; }
+        destination = v;
+        updateDestUI(); save(); render();
+        showFeedback('Destinasi diperbarui ke ' + destination, '#e3f2fd', '#0d47a1');
+    });
+    destInput.addEventListener('keypress', e => { if(e.key === 'Enter') updateDestBtn.click(); });
+
+    clearAllBtn.addEventListener('click', () => {
+        if (!items.length) { showFeedback('Tidak ada item untuk dihapus.', '#fef3e8', '#b85c00'); return; }
+        if (!confirm('Hapus semua rencana perjalanan?')) return;
+        items = []; save(); render();
+        showFeedback('Semua rencana telah dihapus.', '#fef3e8', '#b85c00');
+    });
+
+    loadSampleBtn.addEventListener('click', () => {
+        if (!confirm('Isi contoh rencana perjalanan ke Teca? (Data saat ini akan diganti)')) return;
+        setSampleData();
+        destInput.value = destination;
+        updateDestUI(); save(); render();
+        showFeedback('Contoh rencana perjalanan Teca berhasil dimuat!', '#f9e6ea', '#800020');
+    });
+
+    // ===== INIT =====
+    initFirebase();
+    load();
+    render();
+</script>
+</body>
+</html>
